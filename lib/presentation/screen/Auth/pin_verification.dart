@@ -1,0 +1,111 @@
+import 'package:flutter/material.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:task_manager/presentation/screen/Auth/set_password.dart';
+import 'package:task_manager/presentation/utility/app_colors.dart';
+import 'package:task_manager/presentation/widget/background.dart';
+
+class PinVerifyScreen extends StatefulWidget {
+  const PinVerifyScreen({super.key});
+
+  @override
+  State<PinVerifyScreen> createState() => _PinVerifyScreenState();
+}
+
+class _PinVerifyScreenState extends State<PinVerifyScreen> {
+  final _pinTEController=TextEditingController();
+  final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Background(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(48),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 120,),
+                  Text('OTP Verification',style: Theme.of(context).textTheme.titleLarge,),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 32,left: 4),
+                    child: Text(
+                      'Enter the 6 digit OTP sent to your email.',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                  const SizedBox(height: 16,),
+                  PinCodeTextField(
+                    keyboardType: TextInputType.number,
+                    length: 6,
+                    animationType: AnimationType.fade,
+                    pinTheme: PinTheme(
+                      shape: PinCodeFieldShape.box,
+                      borderRadius: BorderRadius.circular(5),
+                      fieldHeight: 50,
+                      fieldWidth: 40,
+                      activeFillColor: Colors.white,
+                      inactiveFillColor: Colors.white,
+                      inactiveColor: Colors.grey[200],
+                      selectedFillColor: AppColors.themeColor,
+                      selectedColor: AppColors.themeColor
+                    ),
+                    animationDuration: const Duration(milliseconds: 300),
+                    backgroundColor: Colors.transparent,
+                    enableActiveFill: true,
+                    controller: _pinTEController,
+                    beforeTextPaste: (text) {
+                      print("Allowing to paste $text");
+                      //if you return true then it will show the paste confirmation dialog. Otherwise if false, then nothing will happen.
+                      //but you can show anything you want here, like your pop up saying wrong paste format or etc
+                      return true;
+                    }, appContext: context,
+                  ),
+                  const SizedBox(height: 16,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (){
+                        // if(_formKey.currentState!.validate()){
+                        //
+                        // }
+                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SetPassword()),(route)=>false);
+                      },
+                      child: const Icon(
+                        Icons.arrow_circle_right_outlined,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 60,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Have account?",style: Theme.of(context).textTheme.labelSmall,),
+                      TextButton(
+                        onPressed: (){
+                          if(mounted){
+                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SetPassword()),(route)=>false);
+                          }
+                        },
+                        child: const Text(
+                          'Sign In',
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  @override
+  void dispose() {
+    _pinTEController.dispose();
+    super.dispose();
+  }
+}
