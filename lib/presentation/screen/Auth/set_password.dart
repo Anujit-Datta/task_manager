@@ -39,6 +39,7 @@ class _SetPasswordState extends State<SetPassword> {
                   const SizedBox(height: 16,),
                   TextFormField(
                     controller: _password1TEController,
+                    obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'Password',
                     ),
