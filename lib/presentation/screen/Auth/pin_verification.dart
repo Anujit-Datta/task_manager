@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:task_manager/presentation/screen/Auth/set_password.dart';
+import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
 import 'package:task_manager/presentation/utility/app_colors.dart';
 import 'package:task_manager/presentation/widget/background.dart';
 
+import '../../../data/service/network_caller.dart';
+import '../../../data/utils/urls.dart';
+
 class PinVerifyScreen extends StatefulWidget {
-  const PinVerifyScreen({super.key});
+  const PinVerifyScreen({super.key, required this.email});
+
+  final String email;
 
   @override
   State<PinVerifyScreen> createState() => _PinVerifyScreenState();
@@ -57,21 +64,19 @@ class _PinVerifyScreenState extends State<PinVerifyScreen> {
                     enableActiveFill: true,
                     controller: _pinTEController,
                     beforeTextPaste: (text) {
-                      print("Allowing to paste $text");
-                      //if you return true then it will show the paste confirmation dialog. Otherwise if false, then nothing will happen.
-                      //but you can show anything you want here, like your pop up saying wrong paste format or etc
+                      EasyLoading.showToast('My Tasks pasted from clipboard\n$text',toastPosition: EasyLoadingToastPosition.bottom);
                       return true;
-                    }, appContext: context,
+                    },
+                    appContext: context,
                   ),
                   const SizedBox(height: 16,),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: (){
-                        // if(_formKey.currentState!.validate()){
-                        //
-                        // }
-                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SetPassword()),(route)=>false);
+                        if(_formKey.currentState!.validate()){
+                          _checkOtp();
+                        }
                       },
                       child: const Icon(
                         Icons.arrow_circle_right_outlined,
@@ -86,7 +91,7 @@ class _PinVerifyScreenState extends State<PinVerifyScreen> {
                       TextButton(
                         onPressed: (){
                           if(mounted){
-                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SetPassword()),(route)=>false);
+                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SignInScreen()),(route)=>false);
                           }
                         },
                         child: const Text(
@@ -103,9 +108,17 @@ class _PinVerifyScreenState extends State<PinVerifyScreen> {
       ),
     );
   }
-  @override
-  void dispose() {
-    _pinTEController.dispose();
-    super.dispose();
+
+  Future<void> _checkOtp()async{
+    EasyLoading.show(status: 'Verifying OTP');
+    await NetworkCaller.getRequest(Urls.recoverOTPCheck(widget.email,_pinTEController.text.trim())).then((value) {
+      if(value.isSuccess && value.responseBody['status']=='success'){
+        EasyLoading.showToast('OTP verified',toastPosition: EasyLoadingToastPosition.bottom);
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => SetPassword(email: widget.email,pin: _pinTEController.text)), (route) => false);
+      }else{
+        EasyLoading.showToast('Failed OTP match',toastPosition: EasyLoadingToastPosition.bottom);
+      }
+      EasyLoading.dismiss();
+    });
   }
 }

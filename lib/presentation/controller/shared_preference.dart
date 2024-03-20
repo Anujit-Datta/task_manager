@@ -1,12 +1,20 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_manager/data/model/user_model.dart';
 
 class Local{
-  static String accessToken='';
+  static String? accessToken;
+  static UserModel? user;
+
+
   static Future<void> saveData(UserModel user)async {
     SharedPreferences sharedPref= await SharedPreferences.getInstance();
-    await sharedPref.setString('data', jsonEncode(user.toJson()));
+    await sharedPref.setString('data', jsonEncode(user.toJson())).whenComplete(() {
+      Local.user=user;
+      log(Local.user!.photo.toString());
+    });
+
   }
 
   static Future<UserModel?> getData()async {
@@ -15,7 +23,9 @@ class Local{
     if(data==null){
       return null;
     }
-    return UserModel.fromJson(jsonDecode(data));
+    UserModel user= UserModel.fromJson(jsonDecode(data));
+    Local.user=user;
+    return user;
   }
 
   static Future<void> saveToken(String token)async {
@@ -35,8 +45,13 @@ class Local{
 
   static Future<bool> isLoggedIn()async {
     final token = await getToken();
-    accessToken=token??'';
-    return token!=null;
+    accessToken=token;
+    bool loginState= token!=null;
+    if(loginState){
+      final user=await getData();
+      Local.user=user;
+    }
+    return loginState;
   }
 
   static Future<void> clear()async {

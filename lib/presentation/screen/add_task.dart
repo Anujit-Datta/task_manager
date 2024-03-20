@@ -85,7 +85,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       if(value.isSuccess){
         EasyLoading.showToast('Task Added',toastPosition: EasyLoadingToastPosition.bottom);
         if(mounted){
-          Navigator.pop(context);
+          Navigator.pop(context,true);
         }
       }else{
         EasyLoading.showToast(value.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);

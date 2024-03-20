@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
 
+import '../../../data/service/network_caller.dart';
+import '../../../data/utils/urls.dart';
+
 class SetPassword extends StatefulWidget {
-  const SetPassword({super.key});
+  const SetPassword({super.key, required this.pin, required this.email});
+
+  final String email;
+  final String pin;
 
   @override
   State<SetPassword> createState() => _SetPasswordState();
@@ -35,7 +42,7 @@ class _SetPasswordState extends State<SetPassword> {
                     decoration: const InputDecoration(
                       labelText: 'Password',
                     ),
-                    validator: (value) => emailValidation(value),
+                    validator: (value) => passwordValidation(value),
                   ),
                   const SizedBox(height: 16,),
                   TextFormField(
@@ -51,10 +58,9 @@ class _SetPasswordState extends State<SetPassword> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: (){
-                        // if(_formKey.currentState!.validate()){
-                        //
-                        // }
-                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const SignInScreen()),(route)=>false);
+                        if(_formKey.currentState!.validate()){
+                          _resetPassword();
+                        }
                       },
                       child: const Icon(
                         Icons.arrow_circle_right_outlined,
@@ -87,6 +93,28 @@ class _SetPasswordState extends State<SetPassword> {
       ),
     );
   }
+  
+  Future<void> _resetPassword()async{
+    if(_password1TEController.text==_password2TEController.text){
+      EasyLoading.show(status: 'Resetting Password');
+      await NetworkCaller.postRequest(Urls.recoverResetPassword, {
+        'email': widget.email,
+        'OTP': widget.pin,
+        'password': _password1TEController.text,
+      }).then((value) {
+        if(value.isSuccess && value.responseBody['status']=='success'){
+          EasyLoading.showToast('Password reset successfully, Now Sign in',toastPosition: EasyLoadingToastPosition.bottom);
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SignInScreen()),(route)=>false);
+        }else{
+          EasyLoading.showToast('Password Reset failed, try again',toastPosition: EasyLoadingToastPosition.bottom);
+        }
+        EasyLoading.dismiss();
+      });
+    }else{
+      EasyLoading.showError("Both password don't matched",);
+    }
+  }
+  
   @override
   void dispose() {
     _password1TEController.dispose();

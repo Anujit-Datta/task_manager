@@ -1,7 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:task_manager/data/model/login_response_model.dart';
-import 'package:task_manager/data/model/user_model.dart';
 import 'package:task_manager/data/service/network_caller.dart';
 import 'package:task_manager/data/utils/urls.dart';
 import 'package:task_manager/presentation/controller/shared_preference.dart';
@@ -40,6 +41,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 16,),
                   TextFormField(
                     controller: _emailTEController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                     ),
@@ -111,14 +113,16 @@ class _SignInScreenState extends State<SignInScreen> {
       "email": _emailTEController.text.trim(),
       "password": _passwordTEController.text.trim(),
     };
-    await NetworkCaller.postRequest(Urls.login, loginData).then((value) {
+    await NetworkCaller.postRequest(Urls.login, loginData,fromLogin: true).then((value) async{
       if(value.isSuccess){
         LoginResponseModel loginResponse= LoginResponseModel.fromJson(value.responseBody);
-        Local.saveData(loginResponse.data!);
-        Local.saveToken(loginResponse.token!);
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
+        await Local.saveData(loginResponse.data!);
+        await Local.saveToken(loginResponse.token!);
+        log(loginResponse.token.toString());
+        log(Local.accessToken.toString());
+        if(mounted){Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);}
       }else{
-        EasyLoading.showError(value.errorMessage.toString());
+        EasyLoading.showToast(value.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);
       }
       EasyLoading.dismiss();
     });

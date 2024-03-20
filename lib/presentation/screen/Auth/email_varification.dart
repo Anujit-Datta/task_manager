@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:task_manager/presentation/screen/Auth/pin_verification.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
+
+import '../../../data/service/network_caller.dart';
+import '../../../data/utils/urls.dart';
 
 class EmailVerifyScreen extends StatefulWidget {
   const EmailVerifyScreen({super.key});
@@ -15,7 +19,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
   final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return Scaffold(
       body: Background(
         child: SingleChildScrollView(
@@ -38,6 +42,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
                   const SizedBox(height: 16,),
                   TextFormField(
                     controller: _emailTEController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                     ),
@@ -48,10 +53,9 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: (){
-                        // if(_formKey.currentState!.validate()){
-                        //
-                        // }
-                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const PinVerifyScreen()),(route)=>false);
+                        if(_formKey.currentState!.validate()){
+                          _verificationEmailSend();
+                        }
                       },
                       child: const Icon(
                         Icons.arrow_circle_right_outlined,
@@ -83,6 +87,20 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
       ),
     );
   }
+
+  Future<void> _verificationEmailSend()async{
+    EasyLoading.show(status: 'Sending OTP');
+    await NetworkCaller.getRequest(Urls.recoverEmailSend(_emailTEController.text.trim())).then((value) {
+      if(value.isSuccess && value.responseBody['status']=='success'){
+        EasyLoading.showToast('OTP sent, Check email inbox/spam folder',toastPosition: EasyLoadingToastPosition.bottom);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => PinVerifyScreen(email: _emailTEController.text.trim(),)));
+      }else{
+        EasyLoading.showToast(value.errorMessage!,toastPosition: EasyLoadingToastPosition.bottom);
+      }
+      EasyLoading.dismiss();
+    });
+  }
+
   @override
   void dispose() {
     _emailTEController.dispose();

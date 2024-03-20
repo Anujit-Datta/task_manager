@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:task_manager/presentation/controller/globals.dart';
 import 'package:task_manager/presentation/controller/shared_preference.dart';
@@ -5,9 +6,13 @@ import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
 import '../../app.dart';
 import '../screen/update_profile.dart';
 import '../utility/app_colors.dart';
-import '../utility/asset_paths.dart';
 
 AppBar get profileBar {
+  String photo=Local.user?.photo ?? '';
+  if(photo.contains('base64,')){
+    List l=photo.split('base64,');
+    photo=l[1];
+  }
   return AppBar(
     automaticallyImplyLeading: false,
     backgroundColor: AppColors.themeColor,
@@ -21,22 +26,24 @@ AppBar get profileBar {
       child: Row(
         children: [
           CircleAvatar(
-            foregroundImage: AssetImage(AssetPath.appLogoPng),
+            backgroundColor: Colors.transparent,
+            backgroundImage:const AssetImage('asset/image/user-male-circle.png'),
+            foregroundImage: MemoryImage(base64Decode(photo==''?defaultImage:photo)),
           ),
           const SizedBox(width: 6,),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Name',
-                style: TextStyle(
+                Local.user!.name!,
+                style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white
                 ),
               ),
               Text(
-                'Email@mail.com',
-                style: TextStyle(
+                Local.user!.email!,
+                style: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.w400
