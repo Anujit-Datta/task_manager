@@ -1,11 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:task_manager/data/model/login_response_model.dart';
-import 'package:task_manager/data/service/network_caller.dart';
-import 'package:task_manager/data/utils/urls.dart';
-import 'package:task_manager/presentation/controller/shared_preference.dart';
+import 'package:get/get.dart';
+import 'package:task_manager/presentation/controller/sign_in_controller.dart';
 import 'package:task_manager/presentation/screen/Auth/email_varification.dart';
 import 'package:task_manager/presentation/screen/home.dart';
 import 'package:task_manager/presentation/screen/Auth/sign_up.dart';
@@ -23,6 +19,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailTEController=TextEditingController();
   final _passwordTEController=TextEditingController();
   final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
+  final SignInController _signInController=Get.find<SignInController>();
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Center(
                     child: TextButton(
                       onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const EmailVerifyScreen()));
+                        Get.to(()=>const EmailVerifyScreen());
                       },
                       child: const Text(
                         'Forgot Password?',
@@ -88,9 +85,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       const Text("Don't have account?"),
                       TextButton(
                         onPressed: (){
-                          if(mounted){
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const SignUpScreen()));
-                          }
+                          Get.off(() => const SignUpScreen());
                         },
                         child: const Text(
                           'Sign Up',
@@ -109,23 +104,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> signIn()async {
     EasyLoading.show(status: 'Signing in',dismissOnTap: false);
-    Map<String,dynamic> loginData={
-      "email": _emailTEController.text.trim(),
-      "password": _passwordTEController.text.trim(),
-    };
-    await NetworkCaller.postRequest(Urls.login, loginData,fromLogin: true).then((value) async{
-      if(value.isSuccess){
-        LoginResponseModel loginResponse= LoginResponseModel.fromJson(value.responseBody);
-        await Local.saveData(loginResponse.data!);
-        await Local.saveToken(loginResponse.token!);
-        log(loginResponse.token.toString());
-        log(Local.accessToken.toString());
-        if(mounted){Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);}
-      }else{
-        EasyLoading.showToast(value.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);
-      }
-      EasyLoading.dismiss();
-    });
+    bool signInStatus=await _signInController.signIn(_emailTEController.text.trim(), _passwordTEController.text.trim());
+    if(signInStatus){
+      EasyLoading.showToast('Login Success',toastPosition: EasyLoadingToastPosition.bottom);
+      Get.offAll(() => const HomeScreen());
+    }else{
+      EasyLoading.showToast(_signInController.errorMessage,toastPosition: EasyLoadingToastPosition.bottom);
+    }
+    EasyLoading.dismiss();
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
@@ -76,9 +77,7 @@ class _SetPasswordState extends State<SetPassword> {
                       const Text("Have account?"),
                       TextButton(
                         onPressed: (){
-                          if(mounted){
-                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SignInScreen()),(route)=>false);
-                          }
+                          Get.offAll(() => const SignInScreen());
                         },
                         child: const Text(
                           'Sign In',
@@ -105,7 +104,7 @@ class _SetPasswordState extends State<SetPassword> {
       }).then((value) {
         if(value.isSuccess && value.responseBody['status']=='success'){
           EasyLoading.showToast('Password reset successfully, Now Sign in',toastPosition: EasyLoadingToastPosition.bottom);
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SignInScreen()),(route)=>false);
+          Get.offAll(() => const SignInScreen());
         }else{
           EasyLoading.showToast('Password Reset failed, try again',toastPosition: EasyLoadingToastPosition.bottom);
         }

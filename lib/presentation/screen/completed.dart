@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
+import 'package:task_manager/presentation/controller/completed_tasks_controller.dart';
 import 'package:task_manager/presentation/widget/background.dart';
-import '../../data/model/task_list_response.dart';
-import '../../data/service/network_caller.dart';
-import '../../data/utils/urls.dart';
 import '../utility/app_colors.dart';
 import '../widget/empty_list.dart';
 import '../widget/task_card.dart';
@@ -16,8 +15,7 @@ class CompletedTaskScreen extends StatefulWidget {
 }
 
 class _CompletedTaskScreenState extends State<CompletedTaskScreen> {
-  bool _completedTasksListLoading=false;
-  TaskList completedTasks=TaskList();
+  final CompletedTasksController _completedTasksController=Get.find<CompletedTasksController>();
 
   @override
   void initState() {
@@ -33,23 +31,27 @@ class _CompletedTaskScreenState extends State<CompletedTaskScreen> {
         child: Column(
           children: [
             Expanded(
-              child: Visibility(
-                visible: !_completedTasksListLoading,
-                replacement: const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.themeColor,
-                  ),
-                ),
-                child: Visibility(
-                  visible: completedTasks.tasks?.isNotEmpty ?? false,
-                  replacement: const EmptyList(),
-                  child: ListView.builder(
-                    itemCount: completedTasks.tasks?.length ?? 0,
-                    itemBuilder: (context,index){
-                      return TaskCard(task: completedTasks.tasks![index],reloadFunction: _getCompletedTasks,);
-                    },
-                  ),
-                ),
+              child: GetBuilder<CompletedTasksController>(
+                builder: (controller) {
+                  return Visibility(
+                    visible: !controller.inProgress,
+                    replacement: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.themeColor,
+                      ),
+                    ),
+                    child: Visibility(
+                      visible: controller.completedTasks.tasks?.isNotEmpty ?? false,
+                      replacement: const EmptyList(),
+                      child: ListView.builder(
+                        itemCount: controller.completedTasks.tasks?.length ?? 0,
+                        itemBuilder: (context,index){
+                          return TaskCard(task: controller.completedTasks.tasks![index],reloadFunction: _getCompletedTasks,);
+                        },
+                      ),
+                    ),
+                  );
+                }
               ),
             ),
           ],
@@ -59,17 +61,10 @@ class _CompletedTaskScreenState extends State<CompletedTaskScreen> {
   }
 
   Future<void> _getCompletedTasks()async{
-    _completedTasksListLoading=true;
-    if(mounted){setState(() {});}
-    await NetworkCaller.getRequest(Urls.completedTasks).then((value) {
-      if(value.isSuccess){
-        completedTasks=TaskList.fromJson(value.responseBody);
-      }else{
-        EasyLoading.showToast('Failed to get new tasks list!',toastPosition: EasyLoadingToastPosition.bottom);
-      }
-      _completedTasksListLoading=false;
-      if(mounted){setState(() {});}
-    });
+    bool result=await _completedTasksController.getCompletedTasks();
+    if(!result){
+      EasyLoading.showToast('Error fetching tasks list',toastPosition: EasyLoadingToastPosition.bottom);
+    }
   }
 }
 

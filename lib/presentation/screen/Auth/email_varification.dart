@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/presentation/screen/Auth/pin_verification.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
@@ -93,7 +94,7 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
     await NetworkCaller.getRequest(Urls.recoverEmailSend(_emailTEController.text.trim())).then((value) {
       if(value.isSuccess && value.responseBody['status']=='success'){
         EasyLoading.showToast('OTP sent, Check email inbox/spam folder',toastPosition: EasyLoadingToastPosition.bottom);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => PinVerifyScreen(email: _emailTEController.text.trim(),)));
+        Get.to(()=>PinVerifyScreen(email: _emailTEController.text.trim(),));
       }else{
         EasyLoading.showToast(value.errorMessage!,toastPosition: EasyLoadingToastPosition.bottom);
       }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:task_manager/presentation/screen/Auth/set_password.dart';
 import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
@@ -91,7 +92,7 @@ class _PinVerifyScreenState extends State<PinVerifyScreen> {
                       TextButton(
                         onPressed: (){
                           if(mounted){
-                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>const SignInScreen()),(route)=>false);
+                            Get.to(()=>SignInScreen());
                           }
                         },
                         child: const Text(
@@ -114,7 +115,7 @@ class _PinVerifyScreenState extends State<PinVerifyScreen> {
     await NetworkCaller.getRequest(Urls.recoverOTPCheck(widget.email,_pinTEController.text.trim())).then((value) {
       if(value.isSuccess && value.responseBody['status']=='success'){
         EasyLoading.showToast('OTP verified',toastPosition: EasyLoadingToastPosition.bottom);
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => SetPassword(email: widget.email,pin: _pinTEController.text)), (route) => false);
+        Get.offAll(()=>SetPassword(email: widget.email,pin: _pinTEController.text));
       }else{
         EasyLoading.showToast('Failed OTP match',toastPosition: EasyLoadingToastPosition.bottom);
       }

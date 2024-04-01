@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/data/service/network_caller.dart';
 import 'package:task_manager/data/utils/urls.dart';
 import 'package:task_manager/presentation/screen/Auth/sign_in.dart';
@@ -100,9 +101,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const Text("Have account?"),
                       TextButton(
                         onPressed: (){
-                          if(mounted){
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>const SignInScreen()));
-                          }
+                          Get.off(() => const SignInScreen());
                         },
                         child: const Text(
                           'Sign In',
@@ -132,9 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     await NetworkCaller.postRequest(Urls.registration, userData).then((value) {
       if(value.isSuccess){
         EasyLoading.showToast('Signed up successfully, now sign in',toastPosition: EasyLoadingToastPosition.bottom);
-        if(mounted){
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const SignInScreen()), (route) => false);
-        }
+        Get.offAll(() => const SignInScreen());
       }else{
         EasyLoading.showToast(value.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);
       }

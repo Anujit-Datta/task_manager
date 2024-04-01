@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:task_manager/data/model/task_count_response_model.dart';
-import 'package:task_manager/data/model/task_list_response.dart';
+import 'package:get/get.dart';
+import 'package:task_manager/presentation/controller/task_count_by_status_controller.dart';
 import 'package:task_manager/presentation/screen/add_task.dart';
 import 'package:task_manager/presentation/utility/app_colors.dart';
 import 'package:task_manager/presentation/widget/background.dart';
 import 'package:task_manager/presentation/widget/empty_list.dart';
-import '../../data/service/network_caller.dart';
-import '../../data/utils/urls.dart';
+import '../controller/new_tasks_controller.dart';
 import '../controller/shared_preference.dart';
 import '../widget/dashboard_card.dart';
 import '../widget/task_card.dart';
@@ -20,17 +19,14 @@ class NewTaskScreen extends StatefulWidget {
 }
 
 class _NewTaskScreenState extends State<NewTaskScreen> {
-  bool _dashboardLoading=false;
-  bool _newTasksListLoading=false;
-  TaskCountByStatus taskCounts=TaskCountByStatus();
-  TaskList newTasks=TaskList();
+  final TaskCountByStatusController _taskCountByStatusController=Get.find<TaskCountByStatusController>();
+  final NewTasksController _newTaskController=Get.find<NewTasksController>();
 
   @override
   void initState() {
     super.initState();
     Local.isLoggedIn();
-    _getTaskCountByStatus();
-    _getNewTasks();
+    apiCalls();
   }
   @override
   Widget build(BuildContext context) {
@@ -44,40 +40,48 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                Visibility(
-                  visible: !_dashboardLoading,
-                  replacement: const Center(
-                    child: LinearProgressIndicator(
-                      color: AppColors.themeColor,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      dashboardCard(context,'New',taskCounts.data?[0].count ?? 0),
-                      dashboardCard(context,'Progress',taskCounts.data?[1].count ?? 0),
-                      dashboardCard(context,'Cancelled',taskCounts.data?[2].count ?? 0),
-                      dashboardCard(context,'Completed',taskCounts.data?[3].count ?? 0),
-                    ],
-                  ),
+                GetBuilder<TaskCountByStatusController>(
+                  builder: (controller) {
+                    return Visibility(
+                      visible: !controller.inProgress,
+                      replacement: const Center(
+                        child: LinearProgressIndicator(
+                          color: AppColors.themeColor,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          dashboardCard(context,'New',controller.taskCounts.data?[0].count ?? 0),
+                          dashboardCard(context,'Progress',controller.taskCounts.data?[1].count ?? 0),
+                          dashboardCard(context,'Cancelled',controller.taskCounts.data?[2].count ?? 0),
+                          dashboardCard(context,'Completed',controller.taskCounts.data?[3].count ?? 0),
+                        ],
+                      ),
+                    );
+                  }
                 ),
                 Expanded(
-                  child: Visibility(
-                    visible: !_newTasksListLoading,
-                    replacement: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.themeColor,
-                      ),
-                    ),
-                    child: Visibility(
-                      visible: newTasks.tasks?.isNotEmpty ?? false,
-                      replacement: const EmptyList(),
-                      child: ListView.builder(
-                        itemCount: newTasks.tasks?.length ?? 0,
-                        itemBuilder: (context,index){
-                          return TaskCard( task: newTasks.tasks![index],reloadFunction: apiCalls,);
-                        },
-                      ),
-                    ),
+                  child: GetBuilder<NewTasksController>(
+                    builder: (controller) {
+                      return Visibility(
+                        visible: !controller.inProgress,
+                        replacement: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.themeColor,
+                          ),
+                        ),
+                        child: Visibility(
+                          visible: controller.newTasks.tasks?.isNotEmpty ?? false,
+                          replacement: const EmptyList(),
+                          child: ListView.builder(
+                            itemCount: controller.newTasks.tasks?.length ?? 0,
+                            itemBuilder: (context,index){
+                              return TaskCard( task: controller.newTasks.tasks![index],reloadFunction: apiCalls,);
+                            },
+                          ),
+                        ),
+                      );
+                    }
                   ),
                 ),
               ],
@@ -87,10 +91,9 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: ()async{
-          bool taskAdded= await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTaskScreen()));
+          bool taskAdded= await Get.to(() => const AddTaskScreen()) ?? false;
           if(taskAdded){
-            await _getTaskCountByStatus();
-            await _getNewTasks();
+            await apiCalls();
           }
         },
         backgroundColor: AppColors.themeColor,
@@ -106,36 +109,17 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
   }
 
   Future<void> _getTaskCountByStatus()async{
-    _dashboardLoading=true;
-    if(mounted){setState(() {});}
-    await NetworkCaller.getRequest(Urls.taskStatusCount).then((value) {
-      if(value.isSuccess){
-        taskCounts=TaskCountByStatus.fromJson(value.responseBody);
-      }else{
-        taskCounts=TaskCountByStatus(status: 'failed');
-        EasyLoading.showToast('Failed to get task counts!',toastPosition: EasyLoadingToastPosition.bottom);
-      }
-      _dashboardLoading=false;
-      if(mounted){setState(() {});}
-    });
+    bool result=await _taskCountByStatusController.getTaskCountByStatus();
+    if(!result){
+      EasyLoading.showToast('Error fetching task counts!',toastPosition: EasyLoadingToastPosition.bottom);
+    }
   }
 
   Future<void> _getNewTasks()async{
-    _newTasksListLoading=true;
-    if(mounted){
-      setState(() {});
+    bool result=await _newTaskController.getNewTasks();
+    if(!result){
+      EasyLoading.showToast('Error fetching tasks list!',toastPosition: EasyLoadingToastPosition.bottom);
     }
-    await NetworkCaller.getRequest(Urls.newTasks).then((value) {
-      if(value.isSuccess){
-        newTasks=TaskList.fromJson(value.responseBody);
-      }else{
-        EasyLoading.showToast('Failed to get new tasks list!',toastPosition: EasyLoadingToastPosition.bottom);
-      }
-      _newTasksListLoading=false;
-      if(mounted){
-        setState(() {});
-      }
-    });
   }
 
   Future<void> apiCalls() async {

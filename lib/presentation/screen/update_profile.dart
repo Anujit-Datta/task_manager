@@ -1,18 +1,14 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:task_manager/data/model/user_model.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/presentation/controller/globals.dart';
-import 'package:task_manager/presentation/screen/home.dart';
+import 'package:task_manager/presentation/controller/update_profile_controller.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
 import 'package:task_manager/presentation/widget/profile_bar.dart';
 import 'package:image_picker/image_picker.dart';
-
-import '../../data/service/network_caller.dart';
-import '../../data/utils/urls.dart';
 import '../controller/shared_preference.dart';
+import 'home.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
   const UpdateProfileScreen({super.key});
@@ -28,6 +24,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final _mobileTEController=TextEditingController();
   final _passwordTEController=TextEditingController();
   final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
+  final UpdateProfileController _updateProfileController=Get.find<UpdateProfileController>();
   XFile? _pickedImage;
 
   @override
@@ -62,14 +59,16 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                     controller: _emailTEController,
                     enabled: false,
                     decoration: InputDecoration(
-                      labelText: _emailTEController.text,
+                      hintText: _emailTEController.text,
+                      labelText: 'Email (fixed)'
                     ),
                   ),
                   const SizedBox(height: 12,),
                   TextFormField(
                     controller: _firstNameTEController,
                     decoration: InputDecoration(
-                      labelText: _firstNameTEController.text,
+                      hintText: _firstNameTEController.text,
+                      labelText: 'First Name'
                     ),
                     validator: (value) => normalValidation(value, 'First Name'),
                   ),
@@ -77,7 +76,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                   TextFormField(
                     controller: _lastNameTEController,
                     decoration: InputDecoration(
-                      labelText: _lastNameTEController.text,
+                      labelText: 'Last Name',
+                      hintText: _lastNameTEController.text,
                     ),
                     validator: (value) => normalValidation(value, 'Last Name'),
                   ),
@@ -85,8 +85,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                   TextFormField(
                     controller: _mobileTEController,
                     maxLength: 11,
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: _mobileTEController.text,
+                      hintText: _mobileTEController.text,
+                      labelText: 'Mobile',
                     ),
                     validator: (value) => mobileValidation(value),
                   ),
@@ -151,7 +153,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               ),
             ),
             const SizedBox(width: 10,),
-            Expanded(child: Text(_pickedImage?.name ?? '',style: const TextStyle(fontSize: 12),overflow: TextOverflow.ellipsis,)),
+            Expanded(child: Text(_pickedImage?.name ?? 'Tap to pick an image.',style: const TextStyle(fontSize: 12),overflow: TextOverflow.ellipsis,)),
           ],
         )
       ),
@@ -168,51 +170,25 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
   Future<void> _updateProfile() async{
     EasyLoading.show(status: 'Updating Profile');
-    String? image;
-    Map<String,dynamic> updatedInfo={
-      'email': _emailTEController.text.trim(),
-      'firstName': _firstNameTEController.text.trim(),
-      'lastName': _lastNameTEController.text.trim(),
-      'mobile': _mobileTEController.text.trim(),
-    };
-    if(_passwordTEController.text.trim().isNotEmpty){
-      updatedInfo['password']=_passwordTEController.text.trim();
+    bool result = await _updateProfileController.updateProfile(
+      _firstNameTEController.text,
+      _lastNameTEController.text,
+      _mobileTEController.text,
+      _passwordTEController.text,
+      _pickedImage,
+    );
+    if(result){
+      EasyLoading.showToast('Profile Updated Successfully!', toastPosition: EasyLoadingToastPosition.bottom);
+      Get.offAll(()=>const HomeScreen());
+    }else{
+      EasyLoading.showToast(_updateProfileController.errorMessage ?? 'Profile Update Failed',toastPosition: EasyLoadingToastPosition.bottom);
     }
-    if(_pickedImage!=null){
-      List<int> photoBytes=File(_pickedImage!.path).readAsBytesSync();
-      image=base64Encode(photoBytes);
-      updatedInfo['photo']=image;
+    if(mounted){
+      setState(() {});
     }
-
-    await NetworkCaller.postRequest(Urls.profileUpdate, updatedInfo).then((value) async{
-      if(value.isSuccess){
-        if(value.responseBody['status']=='success'){
-          UserModel updatedUserData=UserModel(
-            photo: _pickedImage==null ? Local.user!.photo : image,
-            email: Local.user!.email,
-            firstName: _firstNameTEController.text.trim()!=Local.user!.firstName ? _firstNameTEController.text.trim() : Local.user!.firstName,
-            lastName: _lastNameTEController.text.trim()!=Local.user!.lastName ? _lastNameTEController.text.trim() : Local.user!.lastName,
-            mobile: _mobileTEController.text.trim()!=Local.user!.mobile ? _mobileTEController.text.trim() : Local.user!.mobile,
-            password: _passwordTEController.text.trim()!=Local.user!.password ? _passwordTEController.text.trim() : Local.user!.password,
-          );
-          await Local.saveData(updatedUserData).whenComplete(() {
-            EasyLoading.showToast('Profile Updated Successfully!',toastPosition: EasyLoadingToastPosition.bottom);
-          });
-        }
-        if(mounted){Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=> const HomeScreen()), (route) => false);}
-      }else{
-        EasyLoading.showToast('Failed to update profile!',toastPosition: EasyLoadingToastPosition.bottom);
-        if(!mounted){
-          return;
-        }
-        setState(() {});
-      }
-      EasyLoading.dismiss();
-    });
-
-
-
+    EasyLoading.dismiss();
   }
+
 
   @override
   void dispose() {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:task_manager/data/service/network_caller.dart';
+import 'package:get/get.dart';
 import 'package:task_manager/presentation/utility/validations.dart';
 import 'package:task_manager/presentation/widget/background.dart';
 import 'package:task_manager/presentation/widget/profile_bar.dart';
-import '../../data/utils/urls.dart';
+import '../controller/add_task_controller.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -17,6 +17,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _taskNameTEController=TextEditingController();
   final _taskDescriptionTEController=TextEditingController();
   final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
+  final _addTaskController=Get.find<AddTaskController>();
 
   @override
   Widget build(BuildContext context) {
@@ -76,23 +77,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   Future<void> addTask()async{
     EasyLoading.show(status: 'Adding',dismissOnTap: false);
-    Map<String,dynamic> task={
-      "title": _taskNameTEController.text.trim(),
-      "description":_taskDescriptionTEController.text.trim(),
-      "status":"New"
-    };
-    await NetworkCaller.postRequest(Urls.createTask, task).then((value) {
-      if(value.isSuccess){
-        EasyLoading.showToast('Task Added',toastPosition: EasyLoadingToastPosition.bottom);
-        if(mounted){
-          Navigator.pop(context,true);
-        }
-      }else{
-        EasyLoading.showToast(value.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);
-      }
+    bool result=await _addTaskController.addTask(_taskNameTEController.text, _taskDescriptionTEController.text);
+    if(result){
+      EasyLoading.showToast('Task Added',toastPosition: EasyLoadingToastPosition.bottom);
+      Get.back(result: true);
+    }else{
+      EasyLoading.showToast(_addTaskController.errorMessage.toString(),toastPosition: EasyLoadingToastPosition.bottom);
+    }
       EasyLoading.dismiss();
-    });
-
   }
 
   @override
