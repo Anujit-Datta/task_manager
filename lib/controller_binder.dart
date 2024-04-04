@@ -5,6 +5,7 @@ import 'package:task_manager/presentation/controller/completed_tasks_controller.
 import 'package:task_manager/presentation/controller/new_tasks_controller.dart';
 import 'package:task_manager/presentation/controller/progress_tasks_controller.dart';
 import 'package:task_manager/presentation/controller/sign_in_controller.dart';
+import 'package:task_manager/presentation/controller/sign_up_controller.dart';
 import 'package:task_manager/presentation/controller/task_count_by_status_controller.dart';
 import 'package:task_manager/presentation/controller/update_profile_controller.dart';
 
@@ -12,6 +13,7 @@ class ControllerBinder extends Bindings{
   @override
   void dependencies() {
     Get.put(SignInController());
+    Get.put(SignUpController());
     Get.put(TaskCountByStatusController());
     Get.put(NewTasksController());
     Get.put(ProgressTasksController());
