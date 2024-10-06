@@ -1,7 +1,7 @@
 <div align="center">
-    <img alt="UI" src="https://github.com/Anujit-Datta/ecommerce/blob/master/assets/images/logo.svg">
+    <img alt="UI" src="https://github.com/Anujit-Datta/task_manager/blob/main/asset/image/task_manager_logo.png">
 </div>
-<h3 align="center">An Ecommerce store for electronic gadget items</h3><br>
+<h3 align="center">A Task Manager app for organizing your works and todos</h3><br>
 
 
 <h3 align="left">Used Techs:</h3>
@@ -14,12 +14,13 @@
 
 - User Authentication
 - Otp Verification
-- Product Showcase
-- Product Details
-- Cart
-- Promotional Carousel
-- Wishlist
-- categories
+- All tasks
+- Running tasks
+- Completed tasks
+- Add task
+- Delete task
+- Chage status of tasks
+- Update profile
 
 
 <h3 align="left">UI Overview:</h3>
