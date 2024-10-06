@@ -1,16 +1,29 @@
-# task_manager
+<div align="center">
+    <img alt="UI" src="https://github.com/Anujit-Datta/ecommerce/blob/master/assets/images/logo.svg">
+</div>
+<h3 align="center">An Ecommerce store for electronic gadget items</h3><br>
 
-A new Flutter project.
 
-## Getting Started
+<h3 align="left">Used Techs:</h3>
 
-This project is a starting point for a Flutter application.
+- Flutter
+- REST API
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+<h3 align="left">Features:</h3>
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- User Authentication
+- Otp Verification
+- Product Showcase
+- Product Details
+- Cart
+- Promotional Carousel
+- Wishlist
+- categories
+
+
+<h3 align="left">UI Overview:</h3>
+
+<img alt="UI" src="https://github.com/Anujit-Datta/task_manager/blob/main/asset/taskManagerUI.png">
+
+
